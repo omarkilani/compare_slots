@@ -44,7 +44,12 @@ func GetPrivateEndpoints() []string {
 func GetBlock(endpoint string, slot uint64) (block client.GetBlockResponse, err error) {
 	c := client.NewClient(endpoint)
 
-	block, err = c.GetBlock(context.TODO(), slot)
+	maxSupportedTransactionVersion := uint8(0)
+
+	block, err = c.GetBlockWithConfig(context.TODO(), slot, rpc.GetBlockConfig{
+		Encoding:                       rpc.GetBlockConfigEncodingBase64,
+		MaxSupportedTransactionVersion: &maxSupportedTransactionVersion,
+	})
 
 	log.Printf("GetBlock(%v): %v, err %+v\n", endpoint, slot, err)
 
@@ -220,7 +225,7 @@ func main() {
 	BlockTime         *int64
 	BlockHeight       *int64
 	PreviousBlockhash string
-	ParentSLot        uint64
+	ParentSlot        uint64
 	Transactions      []GetBlockTransaction
 	Rewards           []rpc.GetBlockReward
 
@@ -266,7 +271,7 @@ func CompareSlotContent(j client.GetBlockResponse, k client.GetBlockResponse) bo
 		j.BlockTime == k.BlockTime &&
 		j.BlockHeight == k.BlockHeight &&
 		j.PreviousBlockhash == k.PreviousBlockhash &&
-		j.ParentSLot == k.ParentSLot &&
+		j.ParentSlot == k.ParentSlot &&
 		CompareTransactions(j.Transactions, k.Transactions) &&
 		CompareRewards(j.Rewards, k.Rewards)
 }
